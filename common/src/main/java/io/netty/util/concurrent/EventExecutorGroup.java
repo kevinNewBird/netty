@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 该类定义事件执行器组，组成员为EventExecutor
  * The {@link EventExecutorGroup} is responsible for providing the {@link EventExecutor}'s to use
  * via its {@link #next()} method. Besides this, it is also responsible for handling their
  * life-cycle and allows shutting them down in a global fashion.
@@ -53,7 +54,8 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
      * @param timeout     the maximum amount of time to wait until the executor is {@linkplain #shutdown()}
      *                    regardless if a task was submitted during the quiet period
      * @param unit        the unit of {@code quietPeriod} and {@code timeout}
-     *
+     * quietPeriod: 周期性的时间，默认为2s
+     * timeout: 表示最大等待时长，默认为15s
      * @return the {@link #terminationFuture()}
      */
     Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit);

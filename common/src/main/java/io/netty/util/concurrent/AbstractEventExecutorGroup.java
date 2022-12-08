@@ -32,6 +32,7 @@ import static io.netty.util.concurrent.AbstractEventExecutor.*;
 public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
     @Override
     public Future<?> submit(Runnable task) {
+        // next：说明这个操作永远是异步的操作
         return next().submit(task);
     }
 

@@ -142,6 +142,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
 
     final PoolArena<T> arena;
     final Object base;
+    // （！！！）关键点
     final T memory;
     final boolean unpooled;
 

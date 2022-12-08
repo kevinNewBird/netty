@@ -41,6 +41,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      * the {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
     public NioEventLoopGroup() {
+        // 默认使用 cpu核心数*2
         this(0);
     }
 

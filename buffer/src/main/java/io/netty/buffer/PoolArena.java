@@ -83,6 +83,8 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
             smallSubpagePools[i] = newSubpagePoolHead();
         }
 
+        // 使用率：分别表示100%，75%...,0%
+        // 将对应使用率的内存放到对应的集合中，即q100,q75,...
         q100 = new PoolChunkList<T>(this, null, 100, Integer.MAX_VALUE, chunkSize);
         q075 = new PoolChunkList<T>(this, q100, 75, 100, chunkSize);
         q050 = new PoolChunkList<T>(this, q075, 50, 100, chunkSize);
@@ -90,6 +92,8 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
         q000 = new PoolChunkList<T>(this, q025, 1, 50, chunkSize);
         qInit = new PoolChunkList<T>(this, q000, Integer.MIN_VALUE, 25, chunkSize);
 
+        // 使用链表，连起来。实际分配时，是从q050开始分配。原因是：在保证最少满足一次分配的情况下，太大使用率的碎片过多，所以选择折中的q050优先进行分配。
+        // 也就是方法allocateNormal
         q100.prevList(q075);
         q075.prevList(q050);
         q050.prevList(q025);
@@ -131,6 +135,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
         final int sizeIdx = size2SizeIdx(reqCapacity);
 
         if (sizeIdx <= smallMaxSizeIdx) {
+            // 小叶内存：slab算法，减少内碎片
             tcacheAllocateSmall(cache, buf, reqCapacity, sizeIdx);
         } else if (sizeIdx < nSizes) {
             tcacheAllocateNormal(cache, buf, reqCapacity, sizeIdx);
@@ -138,6 +143,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
             int normCapacity = directMemoryCacheAlignment > 0
                     ? normalizeSize(reqCapacity) : reqCapacity;
             // Huge allocations are never served via the cache so just call allocateHuge
+            // 大叶内存：伙伴算法，减少外碎片
             allocateHuge(buf, normCapacity);
         }
     }
@@ -154,6 +160,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
          * Synchronize on the head. This is needed as {@link PoolChunk#allocateSubpage(int)} and
          * {@link PoolChunk#free(long)} may modify the doubly linked list as well.
          */
+        // slab算法，减少内碎片
         final PoolSubpage<T> head = smallSubpagePools[sizeIdx];
         final boolean needsNormalAllocation;
         synchronized (head) {
@@ -210,6 +217,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     }
 
     private void allocateHuge(PooledByteBuf<T> buf, int reqCapacity) {
+        // 伙伴算法分配大叶内存
         PoolChunk<T> chunk = newUnpooledChunk(reqCapacity);
         activeBytesHuge.add(chunk.chunkSize());
         buf.initUnpooled(chunk, reqCapacity);

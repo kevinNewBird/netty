@@ -65,6 +65,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     static {
         int defaultAlignment = SystemPropertyUtil.getInt(
                 "io.netty.allocator.directMemoryCacheAlignment", 0);
+        // 内存池叶子节点初始大小（8kb, 权衡内碎片和外碎片取中间值，尽量避免产生过多的碎片）
         int defaultPageSize = SystemPropertyUtil.getInt("io.netty.allocator.pageSize", 8192);
         Throwable pageSizeFallbackCause = null;
         try {
@@ -77,6 +78,8 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         DEFAULT_PAGE_SIZE = defaultPageSize;
         DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT = defaultAlignment;
 
+        // 二叉树深度11
+        // 也就是说，分配的内存块默认的大小为 8kb * (2^11) , 也就是16Mb
         int defaultMaxOrder = SystemPropertyUtil.getInt("io.netty.allocator.maxOrder", 11);
         Throwable maxOrderFallbackCause = null;
         try {
@@ -506,6 +509,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
         @Override
         protected synchronized PoolThreadCache initialValue() {
+            // 1.计算并返回最少线程使用的一块内存
             final PoolArena<byte[]> heapArena = leastUsedArena(heapArenas);
             final PoolArena<ByteBuffer> directArena = leastUsedArena(directArenas);
 
@@ -541,6 +545,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
             PoolArena<T> minArena = arenas[0];
             for (int i = 1; i < arenas.length; i++) {
                 PoolArena<T> arena = arenas[i];
+                // numThreadCaches: 表示当前内存被多少线程使用。这里是为了选出一个最少线程使用的内存（保证效率），返回。
+                // 如何保证高并发下的效率：这就牵扯到高并发下锁优化。
+                // 高并发下锁优化：1、锁颗粒度化；2、无锁化
                 if (arena.numThreadCaches.get() < minArena.numThreadCaches.get()) {
                     minArena = arena;
                 }

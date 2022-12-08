@@ -129,6 +129,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) {
+        // 为什么logger作为参数传入？ 原因是定位到后续报错，是哪里的调用发生了异常。
         setChannelOptions(channel, newOptionsArray(), logger);
         setAttributes(channel, newAttributesArray());
 
@@ -140,8 +141,12 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = newAttributesArray(childAttrs);
 
         p.addLast(new ChannelInitializer<Channel>() {
+            // 此时的ch就是NioServerSocketChannel.
+            // 也就是在NioServerSocketChannel初始化的时候（调用ServerBootstrap#channel()方法时完成的初始化）
             @Override
             public void initChannel(final Channel ch) {
+                // 为什么要包一层呢？
+                // 因为主线程是无法处理ServerSocketChannel的相关数据的，数据又给放入到事件循环组执行
                 final ChannelPipeline pipeline = ch.pipeline();
                 ChannelHandler handler = config.handler();
                 if (handler != null) {
