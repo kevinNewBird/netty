@@ -31,6 +31,7 @@ class CompactObjectOutputStream extends ObjectOutputStream {
 
     @Override
     protected void writeStreamHeader() throws IOException {
+        // 相比jdk少了writeShort(STREAM_MAGIC),即ObjectOutputStream的同名方法
         writeByte(STREAM_VERSION);
     }
 
@@ -38,11 +39,13 @@ class CompactObjectOutputStream extends ObjectOutputStream {
     protected void writeClassDescriptor(ObjectStreamClass desc) throws IOException {
         Class<?> clazz = desc.forClass();
         if (clazz.isPrimitive() || clazz.isArray() || clazz.isInterface() ||
-            desc.getSerialVersionUID() == 0) {
+                desc.getSerialVersionUID() == 0) {
             write(TYPE_FAT_DESCRIPTOR);
-            super.writeClassDescriptor(desc);
+            super.writeClassDescriptor(desc); // jdk原生的序列化方法
         } else {
+            // 相比jdk少了很多信息，比如 元信息（大大减少了传输的数据量, 提升了数据在网络传输中的效率）
             write(TYPE_THIN_DESCRIPTOR);
+            // 但是也需要类的名称，类的名称在进行反序列化（反射）是就会用到，因而很重要
             writeUTF(desc.getName());
         }
     }

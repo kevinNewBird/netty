@@ -44,8 +44,10 @@ public class ObjectEncoder extends MessageToByteEncoder<Serializable> {
         ByteBufOutputStream bout = new ByteBufOutputStream(out);
         ObjectOutputStream oout = null;
         try {
+            // 预留4字节长度
             bout.write(LENGTH_PLACEHOLDER);
             oout = new CompactObjectOutputStream(bout);
+            // 序列化对象
             oout.writeObject(msg);
             oout.flush();
         } finally {
@@ -58,6 +60,7 @@ public class ObjectEncoder extends MessageToByteEncoder<Serializable> {
 
         int endIdx = out.writerIndex();
 
+        // 设置长度字段
         out.setInt(startIdx, endIdx - startIdx - 4);
     }
 }

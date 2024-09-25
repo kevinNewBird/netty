@@ -116,6 +116,8 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
 
                 // All opening braces/brackets have been closed. That's enough to conclude
                 // that the JSON object/array is complete.
+                // 当openBraces为 0 时,说明{ 和 } 已经全部成对出现,JSON对象或数组可以解析出了
+                // 当 { 和 }没有成对出现时,调用 decodeByte 来控制 openBraces 数量
                 if (openBraces == 0) {
                     ByteBuf json = extractObject(ctx, in, in.readerIndex(), idx + 1 - in.readerIndex());
                     if (json != null) {

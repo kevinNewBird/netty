@@ -320,6 +320,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // 这里获取的是BossGroup, 处理是在ServerBootstrap.group()方法
+        // register是往MultithreadEventLoopGroup调用，因为BossGroup是NioEventLoopGroup继承了MultithreadEvent...
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
