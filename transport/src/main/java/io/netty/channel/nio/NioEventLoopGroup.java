@@ -61,6 +61,8 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor) {
+        // SelectorProvider.provider未在配置属性中或通过SPI指定，默认使用sun.nio.ch.DefaultSelectorProvider.create()
+        // win: WindowsSelectorProvider, macos: KQueueSelectorProvider, linux:
         this(nThreads, executor, SelectorProvider.provider());
     }
 

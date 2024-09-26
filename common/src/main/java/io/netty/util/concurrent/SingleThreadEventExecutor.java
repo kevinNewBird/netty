@@ -173,6 +173,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = DEFAULT_MAX_PENDING_EXECUTOR_TASKS;
+        // 两层executor：
+        // 第一层是为了调用executor，即ThreadPerTaskExecutor的execute（等同于调用threadFactory.newThread方法并执行）；
+        // 第二层是为了包裹任务，并把NioEventLoop设置到包裹任务里的上下文李
+        // 最终生成的this.executor就是一个单线程时间执行器，即NioEventLoop（根据操作系统不同，可在new时使用不同的NioEventLoopGroup）
+        // 目的：当NioEventLoop被执行时
         this.executor = ThreadExecutorMap.apply(executor, this);
         this.taskQueue = ObjectUtil.checkNotNull(taskQueue, "taskQueue");
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
