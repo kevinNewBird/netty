@@ -3,12 +3,10 @@ package com.pomelo.jdk.io;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * description  NIOServer14_MultiplexingSingleThreadV1 <BR>
@@ -74,6 +72,7 @@ public class NIOServer14_MultiplexingSingleThreadV1 {
                 while (selector.select(500) > 0) {
                     Set<SelectionKey> selectionKeys = selector.selectedKeys();// 返回有状态的fd集合
                     Iterator<SelectionKey> iter = selectionKeys.iterator();
+
                     // 逐一遍历每一个IO
                     // 管你是什么多路复用器, 都只会得到状态,需要程序自己去一个个去处理R/W
                     while (iter.hasNext()) {
@@ -86,12 +85,14 @@ public class NIOServer14_MultiplexingSingleThreadV1 {
                             //那新的fd怎么办
                             // select/poll: 因为他们内核没有空间,那么在jvm中保存和前边的fd3那个listen的一起
                             // epoll: 通过epoll_ctl把新的客户端fd注册到内核空间
-                            acceptHandler(key);
+                            acceptHandler(key); // 调用key.channel().accept()创建客户端连接，生成新的fd5与客户端绑定，这一步做完key.attachment()才能获取到客户端通道
 
                         } else if (key.isReadable()) {// 读事件
                             readHandler(key);
                             //在当前线程,这个方法可能会阻塞, 如果阻塞时间过长,其他的IO早就没电了
                             // 所以   为什么提出了IO Threads
+                        } else if (key.isWritable()) {// 写事件
+                            writeHandler(key);
                         }
                     }
                 }
@@ -102,9 +103,10 @@ public class NIOServer14_MultiplexingSingleThreadV1 {
         }
     }
 
-    private void readHandler(SelectionKey key) {
+    private void readHandler(SelectionKey key) throws IOException {
+        SocketChannel client = null;
         try {
-            SocketChannel client = (SocketChannel) key.channel();
+            client = (SocketChannel) key.channel();
             // 在acceptHandler 方法中注册的数组
             ByteBuffer buffer = (ByteBuffer) key.attachment();
             System.out.println("init: " + buffer);
@@ -130,20 +132,33 @@ public class NIOServer14_MultiplexingSingleThreadV1 {
 
             }
         } catch (IOException e) {
+            client.close();
             e.printStackTrace();
         }
+    }
 
+    private static AtomicInteger counter = new AtomicInteger();
+
+    private void writeHandler(SelectionKey key) throws IOException {
+        System.out.println("写数据计数：" + counter.incrementAndGet());
+        key.interestOps(SelectionKey.OP_WRITE | SelectionKey.OP_READ); // 可能还需要读取客户端数据
+        SocketChannel channel = (SocketChannel) key.channel();
+        ByteBuffer data = ByteBuffer.allocate(1024);
+        data.put("Hello client".getBytes());
+        data.flip();// 写数据，需要把ByteBuffer切换为读模式，才能正确的写入数据
+        channel.write(data);
     }
 
     private void acceptHandler(SelectionKey key) {
         try {
             ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
+            // 目的是为了创建与客户端建立连接，此时key.attachment()==null
             SocketChannel client = ssc.accept();// 目的是调用accept接收客户端,  产生了一个新的fd5
             client.configureBlocking(false);
 
             ByteBuffer buffer = ByteBuffer.allocateDirect(8192);
-            //
-            client.register(selector, SelectionKey.OP_READ, buffer);
+            // 如果需要通道即能接收数据又能发送数据，需要设置ops为可读可写的通道，即 SelectionKey.OP_READ | SelectionKey.OP_WRITE
+            client.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, buffer);
             System.out.println("新客户端:" + client.getRemoteAddress());
         } catch (IOException e) {
             e.printStackTrace();
