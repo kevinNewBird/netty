@@ -158,8 +158,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private static final class SelectorTuple {
-        final Selector unwrappedSelector;
-        final Selector selector;
+        final Selector unwrappedSelector; // 未包装的selector选择器，也就是sun.nio.ch.SelectorImpl的实现类
+        final Selector selector;// 即SelectedSelectionKeySetSelector包装类
 
         SelectorTuple(Selector unwrappedSelector) {
             this.unwrappedSelector = unwrappedSelector;
@@ -207,7 +207,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             return new SelectorTuple(unwrappedSelector);
         }
-
+        // 目的：为了把jdk的SelectorImpl实现类的成员变量selectedKeys和publicSelectedKeys替换为netty自己的集合SelectedSelectionKeySet，便于后续的操作
         final Class<?> selectorImplClass = (Class<?>) maybeSelectorImplClass;
         final SelectedSelectionKeySet selectedKeySet = new SelectedSelectionKeySet();
 

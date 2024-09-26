@@ -73,6 +73,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
+            // 创建每个EventLoop任务单线程的线程工厂，比如NioEventLoop
+            // 绑定阶段在SingleThreadEventExecutor#startThread方法里，注意SingleThreadEventExecutor是NioEventLoop的父类
+            // 在其doStartThread方法中调用了executor，而这个executor就是ThreadPerTaskExecutor(只是被ThreadExecutorMap.apply方法包裹了一层),
+            // 内部对thread进行了赋值thread=Thread.currentThread()
+            // 综上，NioEventLoop绑定了该线程工程创建的线程
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 

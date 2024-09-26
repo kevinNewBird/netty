@@ -32,6 +32,8 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @SuppressWarnings("unchecked")
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        // 两个方法本质都是在顺序的获取执行器。区别在于isPowerOfTwo,使用了按位与运算，而非2的幂次方使用了取模。
+        // 从算法的执行效率，按位与 > 取模
         if (isPowerOfTwo(executors.length)) {
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
