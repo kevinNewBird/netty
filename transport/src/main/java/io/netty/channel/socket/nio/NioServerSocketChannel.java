@@ -71,7 +71,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance
      */
     public NioServerSocketChannel() {
-        this(newSocket(DEFAULT_SELECTOR_PROVIDER));
+        this(newSocket(DEFAULT_SELECTOR_PROVIDER));// newSocket(DEFAULT_SELECTOR_PROVIDER)生成参数为sun.io.ch.ServerSocketChannelImpl
     }
 
     /**
