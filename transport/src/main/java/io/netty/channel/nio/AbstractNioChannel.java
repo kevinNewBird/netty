@@ -77,8 +77,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
-        super(parent); // 非常重要
-        this.ch = ch;
+        // 主要工作:
+        // 1.创建Channel的辅助接口实现Unsafe（实际的I/O读写由其完成）；
+        // 2.创建默认的通道管道DefaultChannelPipeline，包含：头上下文HeadContext和尾上下文TailContext的创建，以及NioServerSocketChannel的成员变量设置
+        super(parent);
+        this.ch = ch; // 对于macos，sun.io.ch.ServerSocketChannelImpl
         this.readInterestOp = readInterestOp;
         try {
             ch.configureBlocking(false);
@@ -379,6 +382,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                // 注册Selector事件，此时因为没有真正的执行，所以设置为0
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

@@ -71,7 +71,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         this.parent = parent;
         id = newId();
         unsafe = newUnsafe(); // AbstractNioMessageChannel#newUnsafe
-        pipeline = newChannelPipeline(); // 非常重要，包含了TailContext和HeadContext的创建
+        pipeline = newChannelPipeline(); // 非常重要，包含：1.TailContext和HeadContext的创建，2.channel设置，即NioServerSocketChannel
     }
 
     /**
@@ -462,14 +462,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
-
+            // 完成绑定，这也就意味着init方法中的lambda表达式的execute有了可执行的条件
             AbstractChannel.this.eventLoop = eventLoop;
-
+            // 第一次进来，即bind的时候并未执行过，所以线程为空
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
                 try {
-                    eventLoop.execute(new Runnable() {
+                    eventLoop.execute(new Runnable() {// 即进入到SingleThreadEventExecutor的execute中
                         @Override
                         public void run() {
                             register0(promise);

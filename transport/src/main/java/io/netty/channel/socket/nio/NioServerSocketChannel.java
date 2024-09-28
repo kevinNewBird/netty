@@ -82,11 +82,11 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     }
 
     /**
-     * Create a new instance using the given {@link ServerSocketChannel}.
+     * Create a new instance using the given {@link ServerSocketChannel}.传入参数为sun.nio.ch.ServerSocketChannelImpl
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
         super(null, channel, SelectionKey.OP_ACCEPT);
-        config = new NioServerSocketChannelConfig(this, javaChannel().socket());
+        config = new NioServerSocketChannelConfig(this, javaChannel().socket());// 第一个参数属于netty，第二个属于jdk原生
     }
 
     @Override

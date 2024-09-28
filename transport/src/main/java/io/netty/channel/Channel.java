@@ -194,6 +194,8 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     Channel flush();
 
     /**
+     * Unsafe接口实际是Channel接口的辅助接口，它不应该被用户代码直接调用。
+     * 实际的I/O读写操作都是由Unsafe接口负责完成的
      * <em>Unsafe</em> operations that should <em>never</em> be called from user-code. These methods
      * are only provided to implement the actual transport, and must be invoked from an I/O thread except for the
      * following methods:

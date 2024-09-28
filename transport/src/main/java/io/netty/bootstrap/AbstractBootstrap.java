@@ -309,8 +309,10 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // 对于ServerBootStrap入口，主要内容：
             // 1.设置原生的ServerSocketChannel为非阻塞状态，
             // 2.设置OP_ACCEPT到netty项目的NioServerSocketChannel的成员变量readInterestOp等
+            // 3.Unsafe（Channel辅助接口）实现类NioMessageUnsafe创建，用于实际的I/O读写操作
+            // 4.DefaultChannelPipeline默认管道创建，包含头尾上下文链表的创建
             channel = channelFactory.newChannel();
-            init(channel);
+            init(channel); // 最重要的是设置了一个lambda表达式ChannelInitializer（里面调用了Channel绑定的EventLoop执行器的执行）
         } catch (Throwable t) {
             if (channel != null) {
                 // channel can be null if newChannel crashed (eg SocketException("too many open files"))

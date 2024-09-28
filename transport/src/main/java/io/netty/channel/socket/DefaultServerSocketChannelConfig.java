@@ -50,7 +50,7 @@ public class DefaultServerSocketChannelConfig extends DefaultChannelConfig
         if (javaSocket == null) {
             throw new NullPointerException("javaSocket");
         }
-        this.javaSocket = javaSocket;
+        this.javaSocket = javaSocket; // sun.nio.ch.ServerSocketAdaptor
     }
 
     @Override

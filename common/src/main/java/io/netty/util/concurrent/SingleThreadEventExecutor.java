@@ -767,8 +767,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             throw new NullPointerException("task");
         }
 
-        boolean inEventLoop = inEventLoop();
-        addTask(task);
+        boolean inEventLoop = inEventLoop();// 第一次进入：此时线程thread成员变量仍为null，即inEventLoop=false
+        addTask(task); // 添加任务到taskQueue中（tailTasks仍为空）
         if (!inEventLoop) {
             startThread();
             if (isShutdown()) {
@@ -875,13 +875,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void startThread() {
         if (state == ST_NOT_STARTED) {
-            if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
+            if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) { // 设置EventLoop的状态未开始-》开始状态
                 boolean success = false;
                 try {
-                    doStartThread();
+                    doStartThread(); // 这里开始去调用执行，并设置成员变量为thread（本质就是调用threadFactory）
                     success = true;
                 } finally {
-                    if (!success) {
+                    if (!success) {// 如果没有设置成功，再次使用CAS将状态只为未开始
                         STATE_UPDATER.compareAndSet(this, ST_STARTED, ST_NOT_STARTED);
                     }
                 }
