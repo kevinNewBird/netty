@@ -27,6 +27,7 @@ public class SelectorServer {
         // 4.创建选择器
         Selector selector = Selector.open();
         // 5.注册选择器到服务器通道，并设置监听事件（监听客户端连接）
+        // 注意：SeletionKey的监听事件是注册在了SelectionKey对象上，而不是selector选择器上
         server.register(selector, SelectionKey.OP_ACCEPT);
         System.err.println("=======================start server==================");
 
