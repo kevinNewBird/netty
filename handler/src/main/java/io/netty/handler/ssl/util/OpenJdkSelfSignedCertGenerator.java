@@ -16,6 +16,7 @@
 
 package io.netty.handler.ssl.util;
 
+import sun.security.util.KnownOIDs;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateIssuerName;
@@ -63,11 +64,10 @@ final class OpenJdkSelfSignedCertGenerator {
         }
         info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
         info.set(X509CertInfo.KEY, new CertificateX509Key(keypair.getPublic()));
-        AlgorithmId algId = AlgorithmId.get("SHA256witRSA");
 //        info.set(X509CertInfo.ALGORITHM_ID,
 //                new CertificateAlgorithmId(new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid)));
         info.set(X509CertInfo.ALGORITHM_ID,
-                new CertificateAlgorithmId(algId));
+                new CertificateAlgorithmId(AlgorithmId.get(KnownOIDs.SHA256withRSA.value())));
 
         // Sign the cert to identify the algorithm that's used.
         X509CertImpl cert = new X509CertImpl(info);
