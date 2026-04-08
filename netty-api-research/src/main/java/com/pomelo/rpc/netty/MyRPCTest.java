@@ -1,4 +1,4 @@
-package com.pomelo.rpc;
+package com.pomelo.rpc.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

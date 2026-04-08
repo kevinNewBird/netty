@@ -1,4 +1,4 @@
-package com.pomelo.rpc;
+package com.pomelo.rpc.netty;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

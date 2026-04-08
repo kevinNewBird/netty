@@ -1,4 +1,4 @@
-package com.pomelo.rpc;
+package com.pomelo.rpc.netty;
 
 /**
  * description  PackMsg <BR>
